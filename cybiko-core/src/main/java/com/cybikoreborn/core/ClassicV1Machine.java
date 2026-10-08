@@ -50,10 +50,13 @@ public final class ClassicV1Machine {
     private final H8STimer16[] timer16 = new H8STimer16[3];
     private final RadioCoProcessor radio = new RadioCoProcessor();
     private SpeakerOutput speaker;
-    private FrameListener frameListener;
+    private volatile FrameListener frameListener;
 
     private boolean bootRomLoaded, flashLoaded;
-    private long totalSteps, frames;
+    // Published once per frame so UI/status readers never wait on the emulation lock.
+    private volatile long totalSteps, frames;
+    private volatile int lastPc;
+    private volatile boolean lastHalted, lastDisplayOn;
     private final StringBuilder serialLog = new StringBuilder();
 
     private static final class KeyEvent { final int col, bit; final boolean down;
@@ -117,6 +120,7 @@ public final class ClassicV1Machine {
         externalRam.load(cfs.getImageData(), 0);
     }
 
+    /** Copies RAM. Takes the emulation lock: call with the runner paused (see ClassicV1Runner.pauseAndWait), never on a UI thread. */
     public synchronized byte[] snapshotNvram() { return externalRam.getRawData().clone(); }
     public static int nvramSize() { return MachineConfig.forType(MachineConfig.MachineType.V1).externalRamSize; }
 
@@ -134,6 +138,7 @@ public final class ClassicV1Machine {
         cpu.reset();
         totalSteps = 0;
         frames = 0;
+        lastPc = cpu.getPC();
     }
 
     /** Queue a physical key change. Safe to call from any thread (e.g. the Android UI thread). */
@@ -206,6 +211,9 @@ public final class ClassicV1Machine {
                 String s = bus.drainSerialOutput(sci);
                 if (!s.isEmpty() && serialLog.length() < 64 * 1024) serialLog.append(s);
             }
+            lastPc = cpu.getPC();
+            lastHalted = cpu.isHalted();
+            lastDisplayOn = lcd.isDisplayOn();
             frames++;
         }
         FrameListener l = frameListener;
@@ -215,11 +223,12 @@ public final class ClassicV1Machine {
     public synchronized void close() { if (speaker != null) speaker.close(); }
 
     public synchronized boolean isReady() { return bootRomLoaded && flashLoaded; }
-    public synchronized long frames() { return frames; }
-    public synchronized long totalSteps() { return totalSteps; }
-    public synchronized int pc() { return cpu.getPC(); }
-    public synchronized boolean halted() { return cpu.isHalted(); }
-    public synchronized boolean displayOn() { return lcd.isDisplayOn(); }
+    // Lock-free status getters (values as of the last completed frame). Safe on a UI thread.
+    public long frames() { return frames; }
+    public long totalSteps() { return totalSteps; }
+    public int pc() { return lastPc; }
+    public boolean halted() { return lastHalted; }
+    public boolean displayOn() { return lastDisplayOn; }
     public synchronized String serialOutput() { return serialLog.toString(); }
     public synchronized int[] currentFrame() { return lcd.getFrameBuffer().clone(); }
     /** Direct bus read, for tests and diagnostics only. */

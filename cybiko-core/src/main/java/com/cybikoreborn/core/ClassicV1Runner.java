@@ -10,7 +10,7 @@ public final class ClassicV1Runner implements AutoCloseable {
     private final ClassicV1Machine machine;
     private final Object lock = new Object();
     private Thread thread;
-    private volatile boolean running, paused;
+    private volatile boolean running, paused, idle;
     private volatile double speedPercent;
     private volatile Throwable failure;
 
@@ -23,6 +23,8 @@ public final class ClassicV1Runner implements AutoCloseable {
             running = true;
             thread = new Thread(this::loop, "cybiko-classic-v1");
             thread.setDaemon(true);
+            // Slightly below normal so the UI thread always wins CPU contention.
+            thread.setPriority(Thread.NORM_PRIORITY - 1);
             thread.start();
         }
     }
@@ -34,7 +36,12 @@ public final class ClassicV1Runner implements AutoCloseable {
         try {
             while (running) {
                 synchronized (lock) {
-                    while (paused && running) lock.wait();
+                    while (paused && running) {
+                        idle = true;
+                        lock.notifyAll();
+                        lock.wait();
+                    }
+                    idle = false;
                 }
                 if (!running) break;
                 machine.runFrame();
@@ -56,10 +63,30 @@ public final class ClassicV1Runner implements AutoCloseable {
         } catch (Throwable t) {
             failure = t;
             running = false;
+        } finally {
+            synchronized (lock) { idle = true; lock.notifyAll(); }
         }
     }
 
     public void pause() { paused = true; }
+
+    /**
+     * Pauses and waits (up to timeoutMs) until the emulation thread has finished its current
+     * frame and is parked, so machine state (e.g. NVRAM) can be read without contention.
+     * Returns true if the thread is parked or not running. Do not call on a UI thread.
+     */
+    public boolean pauseAndWait(long timeoutMs) throws InterruptedException {
+        paused = true;
+        long end = System.currentTimeMillis() + timeoutMs;
+        synchronized (lock) {
+            while (thread != null && running && !idle) {
+                long left = end - System.currentTimeMillis();
+                if (left <= 0) return false;
+                lock.wait(left);
+            }
+        }
+        return true;
+    }
     public void resume() { synchronized (lock) { paused = false; lock.notifyAll(); } }
     public boolean isRunning() { return running; }
     public boolean isPaused() { return paused; }

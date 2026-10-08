@@ -25,7 +25,9 @@ final class AndroidSpeakerSink implements SpeakerOutput.PcmSink {
 
   @Override public void write(byte[] data, int offset, int length) {
     AudioTrack t = track;
-    if (t != null) t.write(data, offset, length, AudioTrack.WRITE_NON_BLOCKING);
+    if (t == null) return;
+    // Never block or throw into the emulation loop (e.g. track released during shutdown).
+    try { t.write(data, offset, length, AudioTrack.WRITE_NON_BLOCKING); } catch (RuntimeException ignored) { }
   }
 
   @Override public void close() {
