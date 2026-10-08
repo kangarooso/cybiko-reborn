@@ -51,7 +51,7 @@ public class ClassicV1MachineSmoke {
         for (int i = 0; i < ClassicV1Machine.MIN_HOLD_FRAMES; i++) m.runFrame();
         check((m.debugRead16(col0) & 0x10) != 0, "Q released after minimum hold");
         check(!m.key("NOT_A_KEY", true), "unknown key rejected");
-        check(ClassicV1Keys.all().size() == 68, "68 Classic keys mapped, got " + ClassicV1Keys.all().size());
+        check(ClassicV1Keys.all().size() == 69, "69 Classic keys mapped, got " + ClassicV1Keys.all().size());
 
         // Runner: real-time thread, pause/resume, clean close.
         ClassicV1Runner r = new ClassicV1Runner(m);
@@ -66,7 +66,22 @@ public class ClassicV1MachineSmoke {
         Thread.sleep(300);
         check(m.frames() > a, "resumed runner advances");
         check(r.failure() == null, "runner failure: " + r.failure());
+        // Freeze regression (v0.2.0): pauseAndWait parks the thread so NVRAM can be copied at once.
+        check(r.pauseAndWait(2000), "runner parks on pauseAndWait");
+        long parked = m.frames();
+        long t0 = System.nanoTime();
+        byte[] nv = m.snapshotNvram();
+        check(nv.length == ClassicV1Machine.nvramSize() && System.nanoTime() - t0 < 200_000_000L, "snapshot while parked is immediate");
+        Thread.sleep(150);
+        check(m.frames() == parked, "parked runner stays parked");
+        r.resume();
+        // Status getters must never wait on the emulation lock (they run on the Android UI thread).
+        long[] seen = {-1};
+        Thread reader = new Thread(() -> { seen[0] = m.frames(); m.pc(); m.halted(); m.displayOn(); });
+        synchronized (m) { reader.start(); reader.join(1000); }
+        check(seen[0] >= 0 && !reader.isAlive(), "status getters are lock-free");
         r.close();
-        System.out.println("PASS: upstream H8S core runs synthetic ROM, frames, audio PCM, key matrix + hold, NVRAM CFS, runner pause/resume");
+        check(r.pauseAndWait(100), "pauseAndWait after close returns at once");
+        System.out.println("PASS: upstream H8S core runs synthetic ROM, frames, audio PCM, key matrix + hold, NVRAM CFS, runner pause/resume/park, lock-free status");
     }
 }

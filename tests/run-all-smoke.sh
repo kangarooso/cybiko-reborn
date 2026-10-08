@@ -25,5 +25,6 @@ while read -r name; do
   core_src+=("$upstream/$name.java")
 done < cybiko-core/upstream-core-files.txt
 mapfile -t own < <(find cybiko-core/src/main/java -name '*.java')
-javac --release 17 -nowarn -d "$tmp/core" "${core_src[@]}" "${own[@]}" tests/ClassicV1MachineSmoke.java
+javac --release 17 -nowarn -d "$tmp/core" "${core_src[@]}" "${own[@]}" tests/ClassicV1MachineSmoke.java tests/ClassicV1LayoutSmoke.java
 java -cp "$tmp/core" ClassicV1MachineSmoke
+java -cp "$tmp/core" ClassicV1LayoutSmoke

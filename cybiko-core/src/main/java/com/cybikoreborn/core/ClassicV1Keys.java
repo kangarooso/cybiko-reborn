@@ -44,8 +44,9 @@ public final class ClassicV1Keys {
         // Column 5: F2, ;, Enter, 6, Y, H, B, backslash
         k("F2", 5, 0x01); k(";", 5, 0x02); k("ENTER", 5, 0x04); k("6", 5, 0x08);
         k("Y", 5, 0x10); k("H", 5, 0x20); k("B", 5, 0x40); k("\\", 5, 0x80);
-        // Column 6: F1, /, (unassigned 0x04), 7, U, J, N
-        k("F1", 6, 0x01); k("/", 6, 0x02); k("7", 6, 0x08);
+        // Column 6: F1, /, BkSp, 7, U, J, N  (BkSp per MAME cybiko.cpp A.6 0x04; the key
+        // sits at the right end of the Classic number row)
+        k("F1", 6, 0x01); k("/", 6, 0x02); k("BKSP", 6, 0x04); k("7", 6, 0x08);
         k("U", 6, 0x10); k("J", 6, 0x20); k("N", 6, 0x40);
         // Column 7: -, ., 0, 8, I, K, M
         k("-", 7, 0x01); k(".", 7, 0x02); k("0", 7, 0x04); k("8", 7, 0x08);
