@@ -1,0 +1,19 @@
+# Upstream emulator sources compiled into :cybiko-core (one class name per line).
+# Source: third_party/cybiko-java-emulator/emulator/src/main/java/com/github/daberkow/
+# (git submodule, daberkow/cybiko-java-emulator, MIT). Everything Swing/AWT,
+# javax.sound, PTY, socket transport or CLI related is deliberately NOT listed.
+AT45DB041Flash
+AddressBus
+CfsImage
+FrameBufferRenderer
+H8SCpu
+H8STimer16
+H8STimer8
+HD66421Lcd
+Log
+MachineConfig
+Memory
+PCF8593Rtc
+RadioCoProcessor
+RadioTransport
+SerialPort

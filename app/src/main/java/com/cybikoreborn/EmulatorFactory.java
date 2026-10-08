@@ -2,12 +2,12 @@ package com.cybikoreborn;
 
 import java.io.File;
 
-/** Explicitly fails closed until a verified Android-compatible upstream core is ported. */
+/** Creates emulator sessions from user-imported firmware. */
 public final class EmulatorFactory {
   private EmulatorFactory() {}
-  public static EmulatorSession createClassicV1(File bootRom, File flashRom, File nvram) {
+  public static EmulatorSession createClassicV1(File bootRom, File flashRom, File nvram) throws Exception {
     if (!bootRom.isFile() || !flashRom.isFile())
       throw new IllegalArgumentException("Import both Classic V1 ROM files first.");
-    throw new UnsupportedOperationException("Original H8S emulator core not yet integrated. No CyOS boot attempted.");
+    return new ClassicV1Session(bootRom, flashRom, nvram);
   }
 }

@@ -8,7 +8,7 @@ def analyze(root):
     if not files: raise ValueError('No upstream Java source files found')
     report = {'source_files':len(files), 'desktop_ui':[], 'android_incompatible':[], 'portable_candidates':[]}
     ui = re.compile(r'\b(?:javax\.swing|java\.awt|javafx)\b')
-    incompatible = re.compile(r'\b(?:java\.lang\.foreign|jdk\.internal|sun\.misc)\b')
+    incompatible = re.compile(r'\b(?:java\.lang\.foreign|jdk\.internal|sun\.misc|javax\.sound|java\.lang\.ProcessBuilder)\b|new ProcessBuilder')
     for f in files:
         code=f.read_text(encoding='utf-8',errors='replace')
         rel=f.relative_to(root).as_posix()

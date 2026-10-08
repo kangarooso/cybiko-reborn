@@ -1,0 +1,33 @@
+{
+  "source_files": 24,
+  "desktop_ui": [
+    "com/github/daberkow/CybikoEmulator.java",
+    "com/github/daberkow/SwingRenderer.java"
+  ],
+  "android_incompatible": [
+    "com/github/daberkow/PtySerialPort.java",
+    "com/github/daberkow/SpeakerOutput.java"
+  ],
+  "portable_candidates": [
+    "com/github/daberkow/AT45DB041Flash.java",
+    "com/github/daberkow/AddressBus.java",
+    "com/github/daberkow/CfsImage.java",
+    "com/github/daberkow/ConsoleRenderer.java",
+    "com/github/daberkow/FrameBufferRenderer.java",
+    "com/github/daberkow/H8SCpu.java",
+    "com/github/daberkow/H8STimer16.java",
+    "com/github/daberkow/H8STimer8.java",
+    "com/github/daberkow/HD66421Lcd.java",
+    "com/github/daberkow/Log.java",
+    "com/github/daberkow/MachineConfig.java",
+    "com/github/daberkow/Memory.java",
+    "com/github/daberkow/MultiRenderer.java",
+    "com/github/daberkow/PCF8593Rtc.java",
+    "com/github/daberkow/RadioCoProcessor.java",
+    "com/github/daberkow/RadioTransport.java",
+    "com/github/daberkow/RemoteDisplayServer.java",
+    "com/github/daberkow/SdrTransport.java",
+    "com/github/daberkow/SerialPort.java",
+    "com/github/daberkow/UdpMulticastTransport.java"
+  ]
+}
